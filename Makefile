@@ -1,10 +1,10 @@
 #Dockerfile vars
 
 #vars
-TAG=
+TAG=v1.4.79
 IMAGENAME=docker-lighttpd
 IMAGEFULLNAME=avhost/${IMAGENAME}
-BRANCH=${shell git symbolic-ref --short HEAD}
+BUILDDATE=$(shell date -u +%Y%m%d)
 
 help:
 	    @echo "Makefile arguments:"
@@ -18,17 +18,13 @@ help:
 
 build:
 	@echo ">>>> Build docker image"
-	@docker buildx build --build-arg TAG=${TAG} --build-arg BUILDDATE=${BUILDDATE} -t ${IMAGEFULLNAME}:${BRANCH} .
+	@docker buildx build --build-arg TAG=${TAG} --build-arg BUILDDATE=${BUILDDATE} -t ${IMAGEFULLNAME}:${TAG} .
 
-publish-latest:
-	@echo ">>>> Publish docker image"
-	docker tag ${IMAGEFULLNAME}:${BRANCH} ${IMAGEFULLNAME}:latest
-	docker push ${IMAGEFULLNAME}:latest
-
-publish-tag:
-	@echo ">>>> Publish docker image"
-	docker tag ${IMAGEFULLNAME}:${BRANCH} ${IMAGEFULLNAME}:${TAG}
-	docker push ${IMAGEFULLNAMEPUB}:${TAG}
+push:
+	@echo ">>>> Publish docker image: " ${TAG}_${BUILDDATE}
+	docker buildx build --push --build-arg TAG=${TAG} --build-arg BUILDDATE=${BUILDDATE} -t ${IMAGEFULLNAME}:latest .
+	docker buildx build --push --build-arg TAG=${TAG} --build-arg BUILDDATE=${BUILDDATE} -t ${IMAGEFULLNAME}:${TAG} .
+	docker buildx build --push --build-arg TAG=${TAG} --build-arg BUILDDATE=${BUILDDATE} -t ${IMAGEFULLNAME}:${TAG}_${BUILDDATE} .
 
 
-all: build publish-latest
+all: build
